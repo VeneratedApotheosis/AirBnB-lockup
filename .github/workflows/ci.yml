@@ -1,0 +1,46 @@
+name: CI
+
+# Runs on every push to main. Keep it fast (target under 3 minutes): lint, typecheck, unit tests, build.
+# Slow Playwright e2e is not run per push; run it manually or on a schedule (see e2e job below).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # TODO: once package-lock.json is committed and in sync, keep `npm ci` (fails loudly on drift).
+      - run: npm ci
+      # Placeholders: until these scripts exist, `--if-present` skips them. Remove it once real scripts are wired.
+      - run: npm run lint --if-present
+      - run: npm run typecheck --if-present
+      - run: npm test --if-present
+      - run: npm run build --if-present
+
+  # Optional: slow extension e2e. Enable by removing `if: false`, or trigger manually.
+  e2e:
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: xvfb-run --auto-servernum npm run e2e

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Local gate before every push. There is no PR review, so this is the last check.
+# Enable once per clone: git config core.hooksPath .githooks
+# Fast checks only (lint, typecheck, unit tests). Bypass with --no-verify ONLY to revert a broken main (AGENTS.md rule 2).
+set -u
+
+[ -f package.json ] || { echo "pre-push: no package.json yet, skipping"; exit 0; }
+
+has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['$1']?0:1)"; }
+
+for s in lint typecheck test; do
+  if has_script "$s"; then
+    echo "pre-push: npm run $s"
+    npm run --silent "$s" || { echo "pre-push: '$s' failed. Fix it before pushing." >&2; exit 1; }
+  else
+    echo "pre-push: no '$s' script yet, skipping (TODO: add it)"
+  fi
+done

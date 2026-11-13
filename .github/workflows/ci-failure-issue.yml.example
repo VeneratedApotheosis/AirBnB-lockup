@@ -1,0 +1,35 @@
+# OPTIONAL. Rename to ci-failure-issue.yml to enable.
+# Opens a `main-broken` issue when CI fails on main, so a red main is announced on the same channel agents already read.
+# Needs the labels from scripts/setup-labels.sh. Uses the built-in GITHUB_TOKEN.
+name: CI failure issue
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  issues: write
+
+jobs:
+  open-issue:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open main-broken issue unless one is already open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          URL: ${{ github.event.workflow_run.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          open=$(gh issue list --repo "$REPO" --label main-broken --state open --json number --jq 'length')
+          if [ "$open" = "0" ]; then
+            gh issue create --repo "$REPO" --label main-broken \
+              --title "main red: CI failed at ${SHA:0:7}" \
+              --body "CI failed on main. Run: $URL
+          Last commit author fixes first (docs/COORDINATION.md section 8). Revert if not fixable in 15 minutes."
+          else
+            echo "main-broken already open"
+          fi

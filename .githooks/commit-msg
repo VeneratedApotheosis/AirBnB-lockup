@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Warn-only commit message check. Never blocks. Enable: git config core.hooksPath .githooks
+msg=$(head -n1 "$1")
+case "$msg" in Merge*|Revert*|fixup!*) exit 0 ;; esac
+
+echo "$msg" | grep -Eq '^(feat|fix|refactor|test|docs|chore|wip)(\([a-z0-9-]+\))?: .+' \
+  || echo "commit-msg WARNING: use 'type(scope): summary (refs #N)'" >&2
+
+case "$msg" in
+  chore*|docs*) ;;
+  *) echo "$msg" | grep -Eq '#[0-9]+' || echo "commit-msg WARNING: add 'refs #N' (the issue this belongs to)" >&2 ;;
+esac
+exit 0
