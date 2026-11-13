@@ -1,0 +1,16 @@
+{
+  "name": "website-accessibility-fixer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "demo": "node scripts/demo.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.36",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.9.3"
+  }
+}
