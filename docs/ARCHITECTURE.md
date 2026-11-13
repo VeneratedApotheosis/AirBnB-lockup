@@ -17,15 +17,15 @@ TODO (human): replace `@TODO` with a GitHub handle per area before day 1.
 
 | Area (label) | Directory | Owner | Responsibility |
 |---|---|---|---|
-| `area:shared` | `src/shared/**` | @TODO-lead | Types, Zod schemas, message protocol. Change only via `INTERFACE` comment + OK. |
-| `area:infra` | `manifest*`, `vite.config.*`, `package.json`, lockfile, `.github/**`, `scripts/**`, `.githooks/**`, `docs/**` | @TODO-lead | Build, CI, manifest, permissions. |
-| `area:background` | `src/background/**` | @TODO-A | Service worker, message routing, storage, orchestration. |
-| `area:content` | `src/content/**` | @TODO-B | Inject audit, receive and apply patches, MutationObserver. |
-| `area:audit` | `src/audit/**` | @TODO-B | Run axe-core, normalize to `Violation`. Pure. |
-| `area:llm` | `src/llm/**` | @TODO-C | Provider client, prompts, Zod validation, retry-once. |
-| `area:patch` | `src/patch/**` | @TODO-C | `Patch` model, safe apply/revert, conflict handling. Pure where possible. |
-| `area:ui` | `src/ui/**` | @TODO-D | Popup/side panel/options views. Props-only components; no `chrome.*` in components. |
-| tests | `tests/**`, `e2e/**` | @TODO-D | Fixtures with known defects, Playwright extension tests. |
+| `area: shared` | `src/shared/**` | @TODO-lead | Types, Zod schemas, message protocol. Change only via `INTERFACE` comment + OK. |
+| `area: infra` | `manifest*`, `vite.config.*`, `package.json`, lockfile, `.github/**`, `scripts/**`, `.githooks/**`, `docs/**` | @TODO-lead | Build, CI, manifest, permissions. |
+| `area: background` | `src/background/**` | @TODO-A | Service worker, message routing, storage, orchestration. |
+| `area: content` | `src/content/**` | @TODO-B | Inject audit, receive and apply patches, MutationObserver. |
+| `area: audit` | `src/audit/**` | @TODO-B | Run axe-core, normalize to `Violation`. Pure. |
+| `area: llm` | `src/llm/**` | @TODO-C | Provider client, prompts, Zod validation, retry-once. |
+| `area: patch` | `src/patch/**` | @TODO-C | `Patch` model, safe apply/revert, conflict handling. Pure where possible. |
+| `area: ui` | `src/ui/**` | @TODO-D | Popup/side panel/options views. Props-only components; no `chrome.*` in components. |
+| `area: tests` | `tests/**`, `e2e/**` | @TODO-D | Fixtures with known defects, Playwright extension tests. |
 
 Rules:
 - One owner per path. Others read, import, or open an issue; they do not edit.

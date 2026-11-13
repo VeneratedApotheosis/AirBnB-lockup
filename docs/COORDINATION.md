@@ -7,35 +7,40 @@ Conventions: `<N>` = issue number. Your agent ID is `<person>-<tool>-<n>` (e.g. 
 ## 1. Session start (every session)
 ```bash
 git pull --rebase
-scripts/session-start.sh        # my issues, others' in-progress, ready work, blocked, main-broken, last 10 coordination comments
+scripts/session-start.sh        # my issues, others' In progress, free Todo work, blocked, main-broken, last 10 coordination comments
 ```
 Then `gh issue view <N> --comments` for anything you will touch. If you already hold an open claim, resume it before taking new work.
 
 ## 2. Issue lifecycle
+Status lives on the **project board** (https://github.com/users/VeneratedApotheosis/projects/4), not in labels. Setup, hierarchy and filters: `docs/ISSUES.md`.
+
 | State | On GitHub |
 |---|---|
-| Ready | open, label `status:ready`, no assignee |
-| In progress | open, assigned, label `status:in-progress`, a `CLAIMED` comment |
-| Blocked | open, label `status:blocked`, latest comment says by what |
-| Done | closed, `DONE` comment with SHA |
+| Todo | open, board Status `Todo`, no assignee |
+| In progress | open, assigned, board Status `In progress`, a `CLAIMED` comment |
+| Blocked | open, native "blocked by" relationship set (`is:blocked`), latest comment says by what. Status stays as is |
+| Done | closed (the board moves it to `Done`), `DONE` comment with SHA |
 
-**Claim** (never skip): `scripts/claim.sh <N> <agent-id> "<plan>" "<files>" [eta]`. It checks the issue is free and unblocked, assigns you, sets `status:in-progress`, posts `CLAIMED`, then re-reads comments. If another `CLAIMED` is earlier, it deletes yours and exits non-zero. Earliest `CLAIMED` comment wins. Pick other work.
+Work on **sub-tasks** only. Epics and tasks are containers (`docs/ISSUES.md` section 2).
+
+**Claim** (never skip): `scripts/claim.sh <N> <agent-id> "<plan>" "<files>" [eta]`. It checks the issue is free and unblocked, assigns you, moves the board card to `In progress`, posts `CLAIMED`, then re-reads comments. It refuses epics and issues with an open blocker. If another `CLAIMED` is earlier, it deletes yours and exits non-zero. Earliest `CLAIMED` comment wins. Pick other work.
 - Already yours? Do not re-claim. Post `PROGRESS` and continue.
 - Only claim issues in your area (`docs/ARCHITECTURE.md`) or ones assigned to you.
 - One active issue per agent.
 
-**Release**: post `UNCLAIMED` (state of work, what is left), then `gh issue edit <N> --remove-assignee @me --remove-label status:in-progress --add-label status:ready`.
+**Release**: post `UNCLAIMED` (state of work, what is left), then `gh issue edit <N> --remove-assignee @me` and `scripts/set-status.sh <N> Todo`.
 
 **Stale**: an in-progress issue with no comment and no commit for 3 hours may be taken over. Comment `STALE? (<agent-id>) @owner`, wait 15 minutes, then post `CLAIMED (takeover)`. Inactive people's claims go stale immediately when a human says so in the pinned issue.
 
-**Close** only when all acceptance criteria are met and the push is confirmed. Then post `DONE` and `gh issue close <N>`.
+**Close** only when all acceptance criteria are met and the push is confirmed. Then post `DONE`. The final commit may say `closes #N` (it closes the issue when pushed to `main`); otherwise `gh issue close <N>`. The board moves closed issues to `Done`. Tick the Done-when checkboxes in the issue body first.
 
 ## 3. Labels
 Create with `scripts/setup-labels.sh`.
-- Status: `status:ready`, `status:in-progress`, `status:blocked`
-- Area: `area:shared`, `area:background`, `area:content`, `area:audit`, `area:llm`, `area:patch`, `area:ui`, `area:infra`
-- Type: `type:feature`, `type:bug`, `type:chore`
+- No status labels and no `blocked` label. Status is the board field; blocked is the native relationship.
+- Type (exactly one per issue): `type: epic`, `type: feature`, `type: bug`, `type: refactor`, `type: test`, `type: docs`, `type: chore`
+- Area (at least one): `area: shared`, `area: background`, `area: content`, `area: audit`, `area: llm`, `area: patch`, `area: ui`, `area: tests`, `area: infra`
 - Special: `main-broken`, `coordination` (the pinned announcements issue)
+- Milestone: every issue gets the single milestone `MVP`.
 
 ## 4. Issue comments as messages
 Write the first word in caps, then `(<agent-id>)`, then the body. Write comment text to a file and pass `--body-file` (UTF-8 without BOM; see section 11).
@@ -47,8 +52,8 @@ Write the first word in caps, then `(<agent-id>)`, then the body. Write comment 
 | `DECISION` | a choice others should know | choice + why |
 | `INTERFACE` | changing anything in `src/shared` or a module's public API | exact change, `@owner` of each dependent |
 | `QUESTION` | need an answer, not blocking | the question, `@who` |
-| `BLOCKED` | cannot proceed | blocked by what; add `status:blocked` |
-| `UNBLOCKED` | unblocked | remove `status:blocked` |
+| `BLOCKED` | cannot proceed | blocked by what; also set the native relationship (`gh issue edit <N> --add-blocked-by <M>`) |
+| `UNBLOCKED` | unblocked | `gh issue edit <N> --remove-blocked-by <M>` |
 | `UNCLAIMED` | releasing | state + what is left |
 | `HANDOFF` | stopping mid-task (section 9) | see section 9 |
 | `DONE` | finished | what changed, files, interfaces changed, how to verify, SHA, follow-ups |
@@ -58,9 +63,9 @@ f=$(mktemp); printf 'PROGRESS (ana-claude-1)\nDone: alt-text pass in src/audit. 
 gh issue comment 12 --body-file "$f"
 ```
 ```bash
-gh issue edit 12 --add-label status:blocked --remove-label status:in-progress
+gh issue edit 12 --add-blocked-by 7
 ```
-New work or a bug found: search first (`gh issue list --state all --search "<words>"`), then `gh issue create --template Task` (or `Bug`), link the parent. Opening is not claiming.
+New work or a bug found: search first (`gh issue list --state all --search "<words>"`), then create it with type and area labels, milestone `MVP` and a parent (`docs/ISSUES.md` section 3). Opening is not claiming.
 
 ## 5. Commits
 `type(scope): summary (refs #N)`. Types: `feat fix refactor test docs chore`. Scope = area (`audit`, `llm`, ...). Final commit of an issue may say `closes #N`. Add the trailer `Agent: <agent-id>`.
@@ -88,7 +93,7 @@ git log origin/main -1                            # confirm your commit is there
 CI red on `main` or a pull produces a failing build:
 1. The author of the last commit fixes it first, before new work. If unreachable for 15 minutes, any agent may.
 2. Fast path: revert the offending commit (`git revert <sha>`), push (`--no-verify` is allowed only for this), then fix forward.
-3. Announce: open an issue labeled `main-broken` (title: `main red: <what>`), comment the fix SHA, close it when CI is green. The optional `ci-failure-issue.yml.example` does the opening automatically.
+3. Announce: open an issue labeled `main-broken`, `type: bug` and `area: infra` (title: `main red: <what>`), comment the fix SHA, close it when CI is green. The optional `ci-failure-issue.yml.example` does the opening automatically.
 4. While `main-broken` is open, others keep working but do not push unrelated changes on top.
 
 ## 9. Handoff (stopping mid-task)
@@ -106,7 +111,7 @@ Then release the issue (section 2). A new agent on another machine must be able 
 
 ## 10. Escalation
 - Unclear spec or product decision: `QUESTION` comment tagging the human owner, then work on another issue. Do not guess.
-- Blocked by another agent's area: `BLOCKED` + `INTERFACE`/`QUESTION` on their issue.
+- Blocked by another agent's area: set "blocked by" on your issue, post `BLOCKED` + `INTERFACE`/`QUESTION` on theirs.
 - Cross-cutting announcement (pull now, risky push in 10 min, dependency added): one line on the `coordination` issue.
 - Humans sync every ~4 hours: check the board, re-pick work.
 

@@ -2,7 +2,7 @@
 name: Task
 about: A scoped unit of work (1-3 hours)
 title: ''
-labels: 'status:ready'
+labels: ''
 assignees: ''
 ---
 
@@ -10,13 +10,19 @@ assignees: ''
 <!-- One sentence. -->
 
 ## Area and files owned
-<!-- One area label (area:*) and the paths this issue will change. If it touches two areas, split it. -->
-- Area: `area:...`
+<!-- One area label (`area: *`) and the paths this issue will change. If it touches two areas, split it. -->
+- Area: `area: ...`
 - Files: `src/...`
 
 ## Acceptance criteria
 <!-- Testable "done when" bullets. -->
 - [ ] ...
+
+## Out of scope
+<!-- What an agent must NOT do here. Keeps scope tight. -->
+
+## Open questions
+<!-- Undecided product/design calls an agent must ask about before starting, or "None". -->
 
 ## Dependencies
 <!-- Issue numbers that must be closed first, or "None". Contract changes needed? Write INTERFACE here. -->

@@ -2,7 +2,7 @@
 name: Bug
 about: Something is broken
 title: ''
-labels: 'type:bug, status:ready'
+labels: 'type: bug'
 assignees: ''
 ---
 
@@ -16,7 +16,7 @@ assignees: ''
 1. ...
 
 ## Area and suspected files
-- Area: `area:...`
+- Area: `area: ...`
 - Files: `src/...` (or "unknown")
 
 ## Environment

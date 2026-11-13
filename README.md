@@ -9,4 +9,4 @@ Chrome Manifest V3 scaffold for auditing the current page and reviewing accessib
 
 The popup sends an audit request to the background service worker, which injects the content script on demand. Audit, LLM, and patch entry points are stubs for the four team issues. The shared Zod schemas currently allow only nonempty alt text and accessible-name attribute proposals. Any expansion to the patch operations should update the shared schema and patch engine together.
 
-The scaffold uses plain Vite, a vanilla popup, and activeTab permissions. See [architecture](docs/architecture.md) and [coordination](docs/COORDINATION.md) for ownership and handoffs.
+The scaffold uses plain Vite, a vanilla popup, and activeTab permissions. See [architecture](docs/ARCHITECTURE.md) and [coordination](docs/COORDINATION.md) for ownership and handoffs.

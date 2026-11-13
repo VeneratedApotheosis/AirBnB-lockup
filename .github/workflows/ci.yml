@@ -21,13 +21,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # TODO: once package-lock.json is committed and in sync, keep `npm ci` (fails loudly on drift).
+      # `npm ci` fails loudly on lockfile drift. Keep it.
       - run: npm ci
-      # Placeholders: until these scripts exist, `--if-present` skips them. Remove it once real scripts are wired.
-      - run: npm run lint --if-present
-      - run: npm run typecheck --if-present
-      - run: npm test --if-present
-      - run: npm run build --if-present
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
 
   # Optional: slow extension e2e. Enable by removing `if: false`, or trigger manually.
   e2e:

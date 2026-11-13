@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Claim an issue safely. Usage: scripts/claim.sh <issue> <agent-id> "<plan>" "<files>" [eta]
+# Claim an issue safely. Usage: scripts/claim.sh <issue> <agent-id|-> "<plan>" "<files>" [eta]
+# Pass `-` as agent-id to use $AGENT_ID (set it once per agent environment).
 # Set TAKEOVER=1 to take over a stale claim (see docs/COORDINATION.md section 2).
 # Exit 0 = you own it. Non-zero = do not start work.
 set -euo pipefail
+. "$(dirname "$0")/lib.sh"
 
 issue="${1:?issue number}"; agent="${2:?agent id}"; plan="${3:?plan}"; files="${4:?files}"; eta="${5:-unknown}"
+[ "$agent" = "-" ] && agent="${AGENT_ID:?set AGENT_ID or pass an agent id}"
 me=$(gh api user --jq .login)
 
 info=$(gh issue view "$issue" --json state,labels,assignees \
@@ -12,7 +15,9 @@ info=$(gh issue view "$issue" --json state,labels,assignees \
 IFS='|' read -r state labels assignees <<<"$info"
 
 [ "$state" = "OPEN" ] || { echo "#$issue is $state"; exit 1; }
-case ",$labels," in *,status:blocked,*) echo "#$issue is blocked"; exit 1 ;; esac
+case ",$labels," in *,"type: epic",*|*,coordination,*) echo "#$issue is a container/announcement issue. Claim a sub-task."; exit 1 ;; esac
+nb=$(open_blockers "$issue")
+[ "${nb:-0}" = "0" ] || { echo "#$issue is blocked by $nb open issue(s). See its Relationships."; exit 1; }
 
 last=$(gh issue view "$issue" --json comments \
   --jq '[.comments[]|select(.body|test("^\\s*(CLAIMED|UNCLAIMED|DONE)"))|.body|split("\n")[0]]|last // ""')
@@ -31,8 +36,7 @@ body=$(mktemp)
 printf '%s by %s / %s\nPlan: %s\nFiles I expect to touch: %s\nETA: %s\n' "$tag" "$me" "$agent" "$plan" "$files" "$eta" > "$body"
 
 gh issue edit "$issue" --add-assignee "$me" >/dev/null 2>&1 || echo "warning: could not assign (permissions?). A comment-only claim still counts."
-gh issue edit "$issue" --add-label status:in-progress >/dev/null 2>&1 || true
-gh issue edit "$issue" --remove-label status:ready >/dev/null 2>&1 || true
+set_status "$issue" "In progress" || echo "warning: could not move the board card (gh auth refresh -s project?). Move it by hand."
 url=$(gh issue comment "$issue" --body-file "$body")
 id="${url##*issuecomment-}"
 
