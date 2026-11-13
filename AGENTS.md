@@ -111,6 +111,7 @@ The issue's Goal, Files and Done-when define the scope. Nothing else is in scope
 
 ## Pointers
 - Protocol, comment formats, git rules: `docs/COORDINATION.md`
+- Commit message format: `docs/COMMITS.md`
 - Issues, labels, board, sub-issues, filters: `docs/ISSUES.md`
 - Setup for a new person or machine: `docs/ONBOARDING.md`
 - Modules, owners, contracts, open decisions: `docs/ARCHITECTURE.md`

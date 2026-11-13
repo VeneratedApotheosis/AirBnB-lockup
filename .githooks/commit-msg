@@ -3,8 +3,8 @@
 msg=$(head -n1 "$1")
 case "$msg" in Merge*|Revert*|fixup!*) exit 0 ;; esac
 
-echo "$msg" | grep -Eq '^(feat|fix|refactor|test|docs|chore|wip)(\([a-z0-9-]+\))?: .+' \
-  || echo "commit-msg WARNING: use 'type(scope): summary (refs #N)'" >&2
+echo "$msg" | grep -Eq '^(feat|fix|refactor|test|docs|chore|wip)(\([a-z0-9-]+\))?!?: .+' \
+  || echo "commit-msg WARNING: use 'type(scope): summary (refs #N)'; see docs/COMMITS.md" >&2
 
 case "$msg" in
   chore*|docs*) ;;

@@ -38,7 +38,8 @@ If `session-start.sh` says the board is unreadable: `gh auth refresh -s project`
 1. `AGENTS.md`
 2. `docs/COORDINATION.md` (claim, comments, push, broken main)
 3. `docs/ISSUES.md` (labels, board, sub-issues, filters)
-4. `docs/ARCHITECTURE.md` (who owns which directory)
+4. `docs/COMMITS.md` (commit messages)
+5. `docs/ARCHITECTURE.md` (who owns which directory)
 
 ## 6. Pick an agent ID
 Format `<person>-<tool>-<n>`, e.g. `ana-claude-1`. Put it in every comment and in the `Agent:` commit trailer. Set it, and your areas, in the agent's environment so scripts need no arguments:

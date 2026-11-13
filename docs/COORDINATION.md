@@ -68,7 +68,7 @@ gh issue edit 12 --add-blocked-by 7
 New work or a bug found: search first (`gh issue list --state all --search "<words>"`), then create it with type and area labels, milestone `MVP` and a parent (`docs/ISSUES.md` section 3). Opening is not claiming.
 
 ## 5. Commits
-`type(scope): summary (refs #N)`. Types: `feat fix refactor test docs chore`. Scope = area (`audit`, `llm`, ...). Final commit of an issue may say `closes #N`. Add the trailer `Agent: <agent-id>`.
+`type(scope): summary (refs #N)`. Types: `feat fix refactor test docs chore`. Scope = area (`audit`, `llm`, ...). Final commit of an issue may say `closes #N`. Add the trailer `Agent: <agent-id>`. Full rules and examples: `docs/COMMITS.md`.
 - One logical change per commit. Commit and push at least every 45 minutes of work.
 - `chore`/`docs` commits with no issue are fine; everything else needs `refs #N`.
 - Stage specific paths. Never `git add .` without reading `git status`.
