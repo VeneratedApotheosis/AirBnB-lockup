@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Website Accessibility Fixer",
+  "description": "Find accessibility barriers and review fixes for the page you are using.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "106",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "src/ui/popup.html" }
+}
