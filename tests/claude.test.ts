@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Patch, Violation } from "../src/shared/contracts";
 import { proposePatches } from "../src/llm";
-import { createClaudeProvider } from "../src/llm/claude";
+import { CLAUDE_MODEL, createClaudeProvider } from "../src/llm/claude";
 
 const finding: Violation = {
   id: "button-name:button",
@@ -69,6 +69,36 @@ describe("Claude provider", () => {
     const provider = createClaudeProvider("test-model", fetchMessages);
     await expect(provider.complete({ violations: [finding], apiKey: "test-key" }))
       .rejects.toThrow(/^Claude API request failed \(HTTP 401\)\.$/);
+    expect(fetchMessages).toHaveBeenCalledTimes(1);
+  });
+
+  it("defaults to the current Opus model", () => {
+    expect(CLAUDE_MODEL).toBe("claude-opus-5-5");
+    expect(createClaudeProvider(CLAUDE_MODEL).name).toBe("claude-opus-5-5");
+  });
+
+  it("sends the browser-access and fallback headers with room for thinking", async () => {
+    const fetchMessages = vi.fn<typeof fetch>().mockResolvedValue(reply(JSON.stringify({ patches: [] })));
+    await createClaudeProvider(CLAUDE_MODEL, fetchMessages).complete({ violations: [finding], apiKey: "test-key" });
+    const init = fetchMessages.mock.calls[0]?.[1];
+    expect(init?.headers).toMatchObject({
+      "anthropic-version": "2023-06-01",
+      "anthropic-beta": "server-side-fallback-2026-07-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    });
+    const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    expect(body).toMatchObject({ model: "claude-opus-5-5", max_tokens: 16_000, fallbacks: "default" });
+    expect(body).not.toHaveProperty("thinking");
+    expect(body).not.toHaveProperty("temperature");
+  });
+
+  it("reports a refusal clearly instead of retrying it", async () => {
+    const fetchMessages = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ stop_reason: "refusal", content: [] }),
+    );
+    const provider = createClaudeProvider(CLAUDE_MODEL, fetchMessages);
+    await expect(proposePatches({ url, violations: [finding], apiKey: "test-key", provider }))
+      .rejects.toThrow("Claude declined to suggest fixes for this page.");
     expect(fetchMessages).toHaveBeenCalledTimes(1);
   });
 });

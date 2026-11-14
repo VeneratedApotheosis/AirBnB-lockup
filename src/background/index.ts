@@ -1,6 +1,7 @@
 import { proposePatches } from "../llm";
 import { patchSetSchema, settingsSchema, violationSchema, type Settings } from "../shared/contracts";
 import type { Operation, OperationMap, PageOperation, Reply, Request } from "../shared/messages";
+import { chooseProvider } from "./provider";
 import { createSiteFixes } from "./site-fixes";
 
 const settingsKey = "accessibilitySettings";
@@ -43,7 +44,8 @@ async function dispatch(request: Request): Promise<OperationMap[Operation]["outp
       const { url } = await activePage();
       const { apiKey } = await getSettings();
       const violations = violationSchema.array().parse(request.input.violations);
-      return patchSetSchema.parse(await proposePatches({ url, apiKey, violations }));
+      const provider = chooseProvider(apiKey);
+      return patchSetSchema.parse(await proposePatches({ url, apiKey, violations, provider }));
     }
     case "SETTINGS_GET": {
       const { profile } = await getSettings();

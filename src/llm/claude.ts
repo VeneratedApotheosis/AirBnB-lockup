@@ -2,8 +2,12 @@ import { z } from "zod";
 import { landmarkRoles } from "../shared/contracts";
 import type { ModelProvider } from "./index";
 
+/** Default model for live suggestions. */
+export const CLAUDE_MODEL = "claude-opus-5-5";
+
 const endpoint = "https://api.anthropic.com/v1/messages";
 const responseSchema = z.object({
+  stop_reason: z.string().nullish(),
   content: z.array(z.object({ type: z.string(), text: z.string().optional() })),
 });
 
@@ -29,16 +33,22 @@ export function createClaudeProvider(model: string, fetchMessages: typeof fetch 
           method: "POST",
           headers: {
             "anthropic-version": "2023-06-01",
+            // Server-side refusal fallback: a declined request is re-run on a fallback model.
+            "anthropic-beta": "server-side-fallback-2026-07-01",
+            // Required for requests from a browser origin (the extension's service worker).
+            "anthropic-dangerous-direct-browser-access": "true",
             "content-type": "application/json",
             "x-api-key": key,
           },
           body: JSON.stringify({
             model,
-            max_tokens: 4096,
+            // Thinking is always on for current models and counts toward max_tokens.
+            max_tokens: 16_000,
+            fallbacks: "default",
             system: instructions,
             messages: [{ role: "user", content: JSON.stringify({ violations, previousError }) }],
           }),
-          signal: AbortSignal.timeout(25_000),
+          signal: AbortSignal.timeout(60_000),
         });
       } catch {
         throw new Error("Could not reach the Claude API. Try again.");
@@ -49,6 +59,8 @@ export function createClaudeProvider(model: string, fetchMessages: typeof fetch 
       const payload: unknown = await response.json().catch(() => undefined);
       const parsed = responseSchema.safeParse(payload);
       if (!parsed.success) return undefined;
+      // A refusal is not malformed output, so it is reported instead of retried.
+      if (parsed.data.stop_reason === "refusal") throw new Error("Claude declined to suggest fixes for this page.");
       return parsed.data.content
         .filter(({ type }) => type === "text")
         .map(({ text }) => text ?? "")
