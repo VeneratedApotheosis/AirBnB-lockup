@@ -8,10 +8,12 @@
     "typecheck": "tsc --noEmit",
     "demo": "node scripts/demo.mjs",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@playwright/test": "1.65.1",
     "@types/chrome": "^0.1.36",
     "eslint": "9.39.5",
     "typescript": "^5.9.3",
