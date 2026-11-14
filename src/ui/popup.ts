@@ -170,5 +170,14 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     return `Undone ${result.restored} · Skipped ${result.skipped}. Rescan to check the page.`;
   }));
 
+  // Re-apply fixes saved for this page on an earlier visit.
+  const initialStatus = status.textContent ?? "";
+  void run(scan, "Checking for saved fixes…", async () => {
+    const result = await request({ type: "SAVED_FIXES_APPLY", input: null });
+    if (!result) return initialStatus;
+    const fixes = `${result.applied.length} saved ${result.applied.length === 1 ? "fix" : "fixes"}`;
+    return `Restored ${fixes} for this page · Skipped ${result.skipped.length}.`;
+  });
+
   mountSettings(document, request);
 }

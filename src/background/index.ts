@@ -1,8 +1,10 @@
 import { proposePatches } from "../llm";
 import { patchSetSchema, settingsSchema, violationSchema, type Settings } from "../shared/contracts";
 import type { Operation, OperationMap, PageOperation, Reply, Request } from "../shared/messages";
+import { createSiteFixes } from "./site-fixes";
 
 const settingsKey = "accessibilitySettings";
+const siteFixes = createSiteFixes(chrome.storage.local);
 
 async function getSettings(): Promise<Settings> {
   const stored = await chrome.storage.local.get(settingsKey);
@@ -18,7 +20,7 @@ async function activePage() {
   return { tabId: tab.id, url: tab.url };
 }
 
-async function sendToPage(request: Request<PageOperation>) {
+async function sendToPage<K extends PageOperation>(request: Request<K>): Promise<OperationMap[K]["output"]> {
   const { tabId } = await activePage();
   const [injection] = await chrome.scripting.executeScript({
     target: { tabId },
@@ -28,7 +30,7 @@ async function sendToPage(request: Request<PageOperation>) {
   });
   if (!injection?.documentId) throw new Error("The page is unavailable. Try again.");
 
-  const reply: Reply<OperationMap[PageOperation]["output"]> | undefined =
+  const reply: Reply<OperationMap[K]["output"]> | undefined =
     await chrome.tabs.sendMessage(tabId, request, { documentId: injection.documentId });
   if (!reply) throw new Error("The page changed. Try again.");
   if (!reply.ok) throw new Error(reply.error);
@@ -52,9 +54,30 @@ async function dispatch(request: Request): Promise<OperationMap[Operation]["outp
       await chrome.storage.local.set({ [settingsKey]: { ...await getSettings(), ...settings } });
       return { profile: settings.profile };
     }
+    case "PATCH_APPLY": {
+      const patchSet = patchSetSchema.parse(request.input);
+      const result = await sendToPage({ type: "PATCH_APPLY", input: patchSet });
+      await siteFixes.save(patchSet.url, patchSet.patches, result);
+      return result;
+    }
+    case "PATCH_REVERT": {
+      const { url } = await activePage();
+      const result = await sendToPage(request);
+      await siteFixes.clear(url);
+      return result;
+    }
+    case "SAVED_FIXES_APPLY": {
+      // Not a website (e.g. chrome://): nothing can be saved there, so nothing to restore.
+      const page = await activePage().catch(() => null);
+      if (!page) return null;
+      const patches = await siteFixes.load(page.url);
+      if (patches.length === 0) return null;
+      return sendToPage({
+        type: "PATCH_APPLY",
+        input: { url: page.url, patches, model: "saved-fixes", createdAt: new Date().toISOString() },
+      });
+    }
     case "AUDIT_REQUEST":
-    case "PATCH_APPLY":
-    case "PATCH_REVERT":
     case "PRESET_APPLY":
       return sendToPage(request);
   }

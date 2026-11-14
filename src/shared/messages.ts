@@ -9,6 +9,8 @@ export interface OperationMap {
   SETTINGS_SET: { input: Settings; output: PublicSettings };
   /** Turn a page preset on, or off with "default". Handled by the content script. */
   PRESET_APPLY: { input: { profile: Settings["profile"] }; output: { profile: Settings["profile"] } };
+  /** Re-apply the fixes saved for the current site. null when none are saved. Routed by background. */
+  SAVED_FIXES_APPLY: { input: null; output: PatchResult | null };
 }
 
 export type Operation = keyof OperationMap;
