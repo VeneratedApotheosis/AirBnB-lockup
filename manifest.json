@@ -12,5 +12,11 @@
     "use_dynamic_url": true
   }],
   "background": { "service_worker": "background.js" },
-  "action": { "default_popup": "src/ui/popup.html" }
+  "action": { "default_popup": "src/ui/popup.html" },
+  "commands": {
+    "fix-page": {
+      "suggested_key": { "default": "Alt+Shift+A", "mac": "Alt+Shift+A" },
+      "description": "Scan this page and apply all suggested fixes"
+    }
+  }
 }
