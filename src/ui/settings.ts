@@ -1,4 +1,5 @@
 import type { PublicSettings } from "../shared/contracts";
+import { createApiKeySetting } from "./api-key";
 import type { sendRequest } from "./transport";
 
 type Profile = PublicSettings["profile"];
@@ -37,10 +38,14 @@ export function mountSettings(document: Document, request: typeof sendRequest): 
   });
   options.append(...rows.map(({ row }) => row));
 
+  const apiKey = createApiKeySetting(document, request);
+  fieldset.after(apiKey.row);
+  const searchable = [...rows, apiKey];
+
   search.addEventListener("input", () => {
     const terms = search.value.trim().toLowerCase().split(/\s+/);
     let count = 0;
-    for (const { row, searchText } of rows) {
+    for (const { row, searchText } of searchable) {
       row.hidden = !terms.every((term) => searchText.includes(term));
       if (!row.hidden) count += 1;
     }
