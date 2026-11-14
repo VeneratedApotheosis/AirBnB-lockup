@@ -2,6 +2,7 @@ import { proposePatches } from "../llm";
 import { patchSetSchema, settingsSchema, violationSchema, type Settings } from "../shared/contracts";
 import type { Operation, OperationMap, PageOperation, Reply, Request } from "../shared/messages";
 import { chooseProvider, resolveApiKey } from "./provider";
+import { createQuickFix } from "./quick-fix";
 import { createSiteFixes } from "./site-fixes";
 
 const settingsKey = "accessibilitySettings";
@@ -88,6 +89,41 @@ async function dispatch(request: Request): Promise<OperationMap[Operation]["outp
 }
 
 const storageReady = chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
+
+// Keyboard shortcut (manifest `commands.fix-page`): same paths as the popup's Scan -> Apply.
+const quickFix = createQuickFix({
+  audit: async () => (await dispatch({ type: "AUDIT_REQUEST", input: null }) as OperationMap["AUDIT_REQUEST"]["output"]).violations,
+  propose: async (violations) =>
+    await dispatch({ type: "PATCH_REQUEST", input: { violations } }) as OperationMap["PATCH_REQUEST"]["output"],
+  apply: async (patchSet) => await dispatch({ type: "PATCH_APPLY", input: patchSet }) as OperationMap["PATCH_APPLY"]["output"],
+});
+
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (command !== "fix-page") return;
+  const tabId = tab?.id;
+  void (async () => {
+    await badge(tabId, "", "");
+    try {
+      await storageReady;
+      const outcome = await quickFix();
+      if (outcome.status === "busy") return;
+      // openPopup needs Chrome 127+. If it fails, the page is still fixed; show the count on the icon instead.
+      await chrome.action.openPopup().catch(async () => {
+        const applied = outcome.status === "applied" ? outcome.result.applied.length : 0;
+        await badge(tabId, String(applied), `Applied ${applied} fixes. Open the extension to review or undo.`);
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The shortcut could not fix this page.";
+      await badge(tabId, "!", message);
+    }
+  })();
+});
+
+async function badge(tabId: number | undefined, text: string, title: string): Promise<void> {
+  if (tabId === undefined) return;
+  await chrome.action.setBadgeText({ tabId, text }).catch(() => undefined);
+  await chrome.action.setTitle({ tabId, title }).catch(() => undefined);
+}
 
 chrome.runtime.onMessage.addListener((request: Request, sender, respond) => {
   if (sender.url !== chrome.runtime.getURL("src/ui/popup.html")) return;
