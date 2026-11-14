@@ -36,16 +36,18 @@ export interface PresetStyle {
   textContent: string | null;
   remove(): void;
 }
-export interface PresetDocument {
+/** Generic over the style element type so a real `Document` (with HTMLStyleElement) fits. */
+export interface PresetDocument<S extends PresetStyle = PresetStyle> {
   getElementById(id: string): unknown;
-  createElement(tag: "style"): PresetStyle;
-  head: { appendChild(node: PresetStyle): unknown } | null;
-  documentElement: { appendChild(node: PresetStyle): unknown };
+  createElement(tag: "style"): S;
+  // NoInfer: S comes from createElement only; DOM's generic appendChild would otherwise confuse inference.
+  head: { appendChild(node: NoInfer<S>): unknown } | null;
+  documentElement: { appendChild(node: NoInfer<S>): unknown };
 }
 
 /** Adds or replaces the preset <style> this module owns. `default` removes it. */
-export function applyPreset(doc: PresetDocument, profile: PresetProfile): void {
-  const existing = doc.getElementById(PRESET_STYLE_ID) as PresetStyle | null;
+export function applyPreset<S extends PresetStyle>(doc: PresetDocument<S>, profile: PresetProfile): void {
+  const existing = doc.getElementById(PRESET_STYLE_ID) as S | null;
   const css = presetCss(profile);
   if (!css) {
     existing?.remove();

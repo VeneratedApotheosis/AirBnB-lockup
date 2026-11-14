@@ -1,6 +1,7 @@
 import { scanPage } from "../audit";
 import { createPatchEngine } from "../patch";
-import { patchSetSchema } from "../shared/contracts";
+import { patchSetSchema, settingsSchema } from "../shared/contracts";
+import { applyPreset } from "./presets";
 import type { OperationMap, PageOperation, Request } from "../shared/messages";
 
 const scope = globalThis as typeof globalThis & { accessibilityFixerListening?: boolean };
@@ -19,8 +20,11 @@ if (!scope.accessibilityFixerListening) {
       }
       case "PATCH_REVERT":
         return patches.revert();
-      case "PRESET_APPLY":
-        throw new Error("Page presets are still being built.");
+      case "PRESET_APPLY": {
+        const profile = settingsSchema.shape.profile.parse(request.input.profile);
+        applyPreset(document, profile);
+        return { profile };
+      }
     }
   }
 
