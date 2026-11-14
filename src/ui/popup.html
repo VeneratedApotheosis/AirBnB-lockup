@@ -18,6 +18,7 @@
           <option value="compact">Compact</option>
           <option value="standard" selected>Standard</option>
           <option value="wide">Wide</option>
+          <option value="custom" hidden>Custom</option>
         </select>
       </label>
     </header>
@@ -62,8 +63,17 @@
       <p id="settings-status" class="muted status" role="status">Loading settings…</p>
     </section>
   </main>
-  <div id="popup-resize" class="resize-handle" role="separator" aria-orientation="horizontal"
-    aria-label="Popup height" tabindex="0"
-    title="Drag to resize. Arrow keys also work. Double-click or Escape to fit content."></div>
+  <div id="popup-resize-height" class="resize-handle resize-s" data-resize="s" role="separator"
+    aria-orientation="horizontal" aria-label="Popup height" tabindex="0"
+    title="Drag to resize. Up and Down arrows also work. Double-click or Escape to fit content."></div>
+  <div id="popup-resize-width" class="resize-handle resize-e" data-resize="e" role="separator"
+    aria-orientation="vertical" aria-label="Popup width" tabindex="0"
+    title="Drag to resize. Left and Right arrows also work. Double-click or Escape for the preset width."></div>
+  <div class="resize-handle resize-w" data-resize="w" aria-hidden="true"
+    title="Drag to resize. Double-click for the preset width."></div>
+  <div class="resize-handle resize-corner resize-se" data-resize="se" aria-hidden="true"
+    title="Drag to resize. Double-click to reset."></div>
+  <div class="resize-handle resize-corner resize-sw" data-resize="sw" aria-hidden="true"
+    title="Drag to resize. Double-click to reset."></div>
 </body>
 </html>

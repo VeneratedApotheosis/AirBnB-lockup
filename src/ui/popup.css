@@ -192,7 +192,9 @@ fieldset:disabled .option { cursor: default; }
   .settings { padding: 1rem 0 0; border-inline-start: 0; border-block-start: 1px solid #d8ded4; }
 }
 
-/* Vertical resize (src/ui/popup-height.ts). Chrome fits the popup window to the body height. */
+/* Resize (src/ui/popup-size.ts). Chrome fits the popup window to the body size. */
+body { position: relative; }
+body[data-popup-width="custom"] { inline-size: var(--popup-width); }
 body[data-popup-height] {
   display: flex;
   flex-direction: column;
@@ -203,18 +205,25 @@ body[data-popup-height] main {
   min-block-size: 0;
   overflow-y: auto;
 }
-body.resizing { cursor: ns-resize; user-select: none; }
+body[data-resizing] { user-select: none; }
+body[data-resizing="s"] { cursor: ns-resize; }
+body[data-resizing="e"], body[data-resizing="w"] { cursor: ew-resize; }
+body[data-resizing="se"] { cursor: nwse-resize; }
+body[data-resizing="sw"] { cursor: nesw-resize; }
 
-.resize-handle {
+.resize-handle { touch-action: none; }
+.resize-handle:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+
+/* Bottom edge: in the flow, so it sits under the content. */
+.resize-s {
   position: relative;
   flex: none;
   block-size: 0.875rem;
   border-block-start: 1px solid #d8ded4;
   background: var(--inset);
   cursor: ns-resize;
-  touch-action: none;
 }
-.resize-handle::after {
+.resize-s::after {
   content: "";
   position: absolute;
   inset-block-start: 50%;
@@ -225,8 +234,30 @@ body.resizing { cursor: ns-resize; user-select: none; }
   background: var(--muted);
   transform: translate(-50%, -50%);
 }
-.resize-handle:hover, body.resizing .resize-handle { background: var(--highlight); }
-.resize-handle:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.resize-s:hover, body[data-resizing="s"] .resize-s { background: var(--highlight); }
+
+/* Side edges and corners: thin strips over the page padding. */
+.resize-e, .resize-w {
+  position: fixed;
+  inset-block: 0 0.875rem;
+  inline-size: 0.5rem;
+  cursor: ew-resize;
+  z-index: 1;
+}
+.resize-e { inset-inline-end: 0; }
+.resize-w { inset-inline-start: 0; }
+.resize-e:hover, .resize-w:hover,
+body[data-resizing="e"] .resize-e, body[data-resizing="w"] .resize-w { background: var(--highlight); }
+
+.resize-corner {
+  position: fixed;
+  inset-block-end: 0;
+  inline-size: 1rem;
+  block-size: 1rem;
+  z-index: 2;
+}
+.resize-se { inset-inline-end: 0; cursor: nwse-resize; }
+.resize-sw { inset-inline-start: 0; cursor: nesw-resize; }
 
 .visually-hidden {
   position: absolute;

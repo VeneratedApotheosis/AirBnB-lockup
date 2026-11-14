@@ -1,20 +1,7 @@
 import { mountPopup } from "./popup";
-import { mountPopupHeight } from "./popup-height";
+import { mountPopupSize } from "./popup-size";
 import { sendRequest } from "./transport";
 
-const width = document.querySelector<HTMLSelectElement>("#popup-width");
-if (width) {
-  const storageKey = "popup-width";
-  const savedWidth = localStorage.getItem(storageKey);
-  if (savedWidth && [...width.options].some((option) => option.value === savedWidth)) {
-    width.value = savedWidth;
-  }
-  document.body.dataset.popupWidth = width.value;
-  width.addEventListener("change", () => {
-    document.body.dataset.popupWidth = width.value;
-    localStorage.setItem(storageKey, width.value);
-  });
-}
-
-mountPopupHeight(document, localStorage);
+// Width presets, drag-to-resize handles and saved sizes (src/ui/popup-size.ts).
+mountPopupSize(document, localStorage);
 mountPopup(document, sendRequest);
