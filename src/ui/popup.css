@@ -1,13 +1,37 @@
+/* Inter (SIL OFL 1.1), bundled in public/fonts; no network request. */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * UCLA blue and gold (official colours only; no logo or wordmark).
+ * Contrast on white: ink 11.8:1, accent 7.9:1, brand 5.0:1 (white text), muted 6.8:1, border 4.5:1.
+ * Gold is only ever a fill behind dark-blue text, never text or an outline on white.
+ */
 :root {
   color-scheme: light;
-  font: 100%/1.45 "Segoe UI", system-ui, sans-serif;
-  --ink: #182d27;
-  --muted: #465d55;
-  --accent: #12624a;
-  --accent-strong: #0e4636;
-  --surface: #f7faf8;
-  --inset: #e9f0ec;
-  --highlight: #d9eee2;
+  --font: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  font: 100%/1.5 var(--font);
+  font-feature-settings: "cv11", "ss03";
+  -webkit-font-smoothing: antialiased;
+  --ink: #003b5c;            /* UCLA Darkest Blue */
+  --muted: #4a5d6e;
+  --accent: #005587;         /* UCLA Darker Blue */
+  --accent-strong: #003b5c;
+  --brand: #2774ae;          /* UCLA Blue */
+  --gold: #ffd100;           /* UCLA Gold */
+  --gold-strong: #ffc72c;    /* UCLA Darker Gold */
+  --gold-soft: #fff6d1;
+  --surface: #ffffff;
+  --inset: #f2f6fa;
+  --highlight: #e4eef7;
+  --line: #d6e1eb;           /* decorative separators */
+  --border: #5e7a93;         /* control borders, 3:1+ */
+  --danger: #b3261e;
   --radius: 0.625rem;
   color: var(--ink);
   background: var(--surface);
@@ -20,6 +44,8 @@ body {
   inline-size: 42rem;
   max-inline-size: 100%;
   margin: 0;
+  /* Chrome's extension-page stylesheet sets body to 75% Segoe UI; restore our font and 16px base. */
+  font: 1rem/1.5 var(--font);
 }
 
 body[data-popup-width="compact"] { inline-size: 25rem; }
@@ -28,7 +54,7 @@ body[data-popup-width="compact"] main { grid-template-columns: minmax(0, 1fr); }
 body[data-popup-width="compact"] .settings {
   padding: 1rem 0 0;
   border-inline-start: 0;
-  border-block-start: 1px solid #d8ded4;
+  border-block-start: 1px solid var(--line);
 }
 
 main {
@@ -44,21 +70,28 @@ main {
   flex-wrap: wrap;
   gap: 0.75rem;
   grid-column: 1 / -1;
-  padding-block: 0.15rem 1.125rem;
-  border-block-end: 1px solid #d8ded4;
+  /* Full-bleed UCLA Blue bar with a gold rule; white text is 5.0:1. */
+  margin: -1.375rem -1.375rem 0;
+  padding: 0.75rem 1.375rem;
+  color: #ffffff;
+  background: var(--brand);
+  border-block-end: 4px solid var(--gold);
 }
+.masthead h1 { color: #ffffff; font-weight: 650; letter-spacing: -0.01em; }
+/* Gold focus ring on the blue bar (3.3:1 against UCLA Blue). */
+.masthead :focus-visible { outline-color: var(--gold); }
 .masthead .popup-width {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin: 0 0 0 auto;
-  color: var(--muted);
+  color: #ffffff;
   font-size: 0.875rem;
 }
 .popup-width select {
   min-block-size: 2.75rem;
   padding-inline: 0.45rem;
-  border: 1px solid #729184;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--ink);
   background: var(--surface);
@@ -69,19 +102,19 @@ main {
   place-items: center;
   flex: 0 0 1.375rem;
   block-size: 1.375rem;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--gold);
   border-radius: 0.35rem;
 }
 .brand-mark::before {
   content: "";
   inline-size: 0.6rem;
   block-size: 0.3rem;
-  border-block: 2px solid var(--accent);
+  border-block: 2px solid var(--gold);
 }
 h1, h2, h3, p { margin: 0; }
 h1 { font-size: 1rem; line-height: 1.2; }
-h2 { font-size: 1.25rem; letter-spacing: -0.02em; }
-h3 { font-size: 1rem; }
+h2 { font-size: 1.125rem; font-weight: 650; letter-spacing: -0.015em; }
+h3 { font-size: 1rem; font-weight: 650; }
 .section-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 0.5rem; }
 
 .status, .muted, .rows, summary, label[for] { font-size: 0.9375rem; }
@@ -94,9 +127,10 @@ h3 { font-size: 1rem; }
   line-height: 1.14;
   letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums;
+  color: var(--accent);
 }
 .muted { color: var(--muted); }
-.error { color: #922e28; }
+.error { color: var(--danger); }
 
 button, input { font: inherit; }
 button { cursor: pointer; }
@@ -107,22 +141,24 @@ button, summary { min-block-size: 2.75rem; }
   padding: 0.5rem 0.875rem;
   border: 0;
   border-radius: var(--radius);
-  font-weight: 650;
+  font-weight: 600;
+  transition: background-color 120ms ease;
 }
 
-.primary { color: white; background: var(--accent); }
+.primary { color: #ffffff; background: var(--accent); box-shadow: inset 0 -3px 0 var(--gold); }
 .primary:hover:enabled { background: var(--accent-strong); }
-.primary:disabled { color: var(--muted); background: var(--inset); }
+.primary:disabled { color: var(--muted); background: var(--inset); box-shadow: none; }
 .page-workspace:has(.scan-result:not([hidden])) #scan {
   color: var(--accent-strong);
   background: var(--inset);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 .page-workspace:has(.scan-result:not([hidden])) #scan:hover:enabled { background: var(--highlight); }
 .quiet { color: var(--accent); background: transparent; padding: 0 0.375rem; border: 0; font-size: 0.875rem; font-weight: 650; }
 .quiet:hover:enabled { text-decoration: underline; }
 .quiet:disabled { color: var(--muted); }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
 #review, details { margin-block-start: 1rem; }
@@ -132,12 +168,13 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .rows li { overflow-wrap: anywhere; }
 #proposals li + li { margin-block-start: 0.375rem; }
 #proposals .option { background: var(--inset); padding: 0.75rem; }
-#proposals .option:hover, #proposals .option:focus-within,
-#proposals .option:has(:checked) { background: var(--highlight); }
+#proposals .option:hover, #proposals .option:focus-within { background: var(--highlight); }
+/* Selected: soft gold fill with a gold bar; text stays dark blue. */
+#proposals .option:has(:checked) { background: var(--gold-soft); box-shadow: inset 4px 0 0 var(--gold-strong); }
 #apply { margin-block-start: 0.625rem; }
 
 summary { padding-block: 0.625rem; font-weight: 650; cursor: pointer; }
-#findings-list > li { padding-block: 0.75rem; border-block-start: 1px solid #d8ded4; }
+#findings-list > li { padding-block: 0.75rem; border-block-start: 1px solid var(--line); }
 #findings-list strong { font-weight: 650; }
 #findings-list .muted { margin-block-start: 0.25rem; }
 .finding-group { margin-block-start: 0.125rem; }
@@ -150,7 +187,7 @@ summary { padding-block: 0.625rem; font-weight: 650; cursor: pointer; }
 .settings {
   min-inline-size: 0;
   padding-inline-start: 1.125rem;
-  border-inline-start: 1px solid #d8ded4;
+  border-inline-start: 1px solid var(--line);
 }
 
 .settings h2 { margin-block-end: 0.625rem; }
@@ -163,7 +200,7 @@ input[type="search"], input[type="password"] {
   min-block-size: 2.75rem;
   margin-block-end: 0.5rem;
   padding: 0.5rem 0.625rem;
-  border: 1px solid #729184;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--ink);
   background: var(--surface);
@@ -181,7 +218,8 @@ input::placeholder { color: var(--muted); }
   cursor: pointer;
 }
 
-.option:hover, .option:focus-within, .option:has(:checked) { background: var(--highlight); }
+.option:hover, .option:focus-within { background: var(--highlight); }
+.option:has(:checked) { background: var(--gold-soft); box-shadow: inset 4px 0 0 var(--gold-strong); }
 .option input { inline-size: 1rem; block-size: 1rem; margin: 0.15rem 0 0; }
 fieldset:disabled .option { cursor: default; }
 .settings .status { margin-block-end: 0; }
@@ -189,7 +227,7 @@ fieldset:disabled .option { cursor: default; }
 
 @media (max-width: 31rem) {
   main { grid-template-columns: minmax(0, 1fr); }
-  .settings { padding: 1rem 0 0; border-inline-start: 0; border-block-start: 1px solid #d8ded4; }
+  .settings { padding: 1rem 0 0; border-inline-start: 0; border-block-start: 1px solid var(--line); }
 }
 
 /* Resize (src/ui/popup-size.ts). Chrome fits the popup window to the body size. */
@@ -219,7 +257,7 @@ body[data-resizing="sw"] { cursor: nesw-resize; }
   position: relative;
   flex: none;
   block-size: 0.875rem;
-  border-block-start: 1px solid #d8ded4;
+  border-block-start: 1px solid var(--line);
   background: var(--inset);
   cursor: ns-resize;
 }
