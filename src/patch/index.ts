@@ -5,6 +5,8 @@ export interface PatchElement {
   getAttribute(name: string): string | null;
   setAttribute(name: string, value: string): void;
   removeAttribute(name: string): void;
+  /** False once the page has removed the element. Missing counts as attached. */
+  readonly isConnected?: boolean;
 }
 
 /** The slice of Document the engine needs. A real Document satisfies it. */
@@ -39,8 +41,11 @@ export function createPatchEngine(root: PatchRoot): PatchEngine {
     const target = resolveTarget(root, patch.selector);
     if (typeof target === "string") return target;
 
+    // Same element as last time: keep it, unless the site has changed it since.
+    // A different element (the page re-rendered it) is patched below as a new edit;
+    // the old edit stays tracked so revert can restore it if it is still attached.
     const previous = byPatchId.get(patch.id);
-    if (previous) {
+    if (previous && previous.element === target) {
       const current = previous.element.getAttribute(previous.name);
       if (current === previous.applied) return null;
       return "site-modified";
@@ -82,7 +87,7 @@ export function createPatchEngine(root: PatchRoot): PatchEngine {
     revert() {
       const result: RevertResult = { restored: 0, skipped: 0 };
       for (const edit of edits.reverse()) {
-        if (edit.element.getAttribute(edit.name) !== edit.applied) {
+        if (edit.element.isConnected === false || edit.element.getAttribute(edit.name) !== edit.applied) {
           result.skipped += 1;
           continue;
         }

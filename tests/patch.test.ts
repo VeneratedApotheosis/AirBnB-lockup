@@ -4,6 +4,7 @@ import { createPatchEngine, type PatchElement, type PatchRoot } from "../src/pat
 
 class FakeElement implements PatchElement {
   private attrs = new Map<string, string>();
+  isConnected = true;
   constructor(initial: Record<string, string> = {}) {
     for (const [k, v] of Object.entries(initial)) this.attrs.set(k, v);
   }
@@ -142,11 +143,92 @@ describe("patch engine revert", () => {
     expect(button.getAttribute("aria-label")).toBe("Site's own label");
   });
 
+  it("skips a detached element without throwing", () => {
+    const button = new FakeElement();
+    const engine = createPatchEngine(fakeRoot({ "#search": [button] }));
+    engine.apply([patch()]);
+    button.isConnected = false;
+    expect(engine.revert()).toEqual({ restored: 0, skipped: 1 });
+  });
+
   it("is a no-op when called twice", () => {
     const button = new FakeElement();
     const engine = createPatchEngine(fakeRoot({ "#search": [button] }));
     engine.apply([patch()]);
     engine.revert();
     expect(engine.revert()).toEqual({ restored: 0, skipped: 0 });
+  });
+});
+
+describe("patch engine on re-rendered pages", () => {
+  /** The page swaps the element behind "#search" for a new one, as a SPA re-render does. */
+  function rerender(map: Record<string, FakeElement[]>, old: FakeElement, next: FakeElement) {
+    old.isConnected = false;
+    map["#search"] = [next];
+  }
+
+  it("patches the new element and reverts it to its own original", () => {
+    const old = new FakeElement({ "aria-label": "old-first" });
+    const map = { "#search": [old] };
+    const engine = createPatchEngine(fakeRoot(map));
+    engine.apply([patch()]);
+
+    const next = new FakeElement({ "aria-label": "new-original" });
+    rerender(map, old, next);
+    expect(engine.apply([patch()])).toEqual({ applied: ["p1"], skipped: [] });
+    expect(next.getAttribute("aria-label")).toBe("Search events");
+
+    expect(engine.revert()).toEqual({ restored: 1, skipped: 1 });
+    expect(next.getAttribute("aria-label")).toBe("new-original");
+    expect(old.getAttribute("aria-label")).toBe("Search events");
+  });
+
+  it("removes the attribute on revert when the new element had none", () => {
+    const old = new FakeElement();
+    const map = { "#search": [old] };
+    const engine = createPatchEngine(fakeRoot(map));
+    engine.apply([patch()]);
+    const next = new FakeElement();
+    rerender(map, old, next);
+    engine.apply([patch()]);
+    engine.revert();
+    expect(next.getAttribute("aria-label")).toBeNull();
+  });
+
+  it("restores every still-attached element the patch touched", () => {
+    const first = new FakeElement({ "aria-label": "a" });
+    const map = { "#search": [first] };
+    const engine = createPatchEngine(fakeRoot(map));
+    engine.apply([patch()]);
+    const second = new FakeElement({ "aria-label": "b" });
+    map["#search"] = [second];
+    engine.apply([patch()]);
+    expect(engine.revert()).toEqual({ restored: 2, skipped: 0 });
+    expect(first.getAttribute("aria-label")).toBe("a");
+    expect(second.getAttribute("aria-label")).toBe("b");
+  });
+
+  it("still never overwrites a site edit on the new element", () => {
+    const old = new FakeElement();
+    const map = { "#search": [old] };
+    const engine = createPatchEngine(fakeRoot(map));
+    engine.apply([patch()]);
+    const next = new FakeElement();
+    rerender(map, old, next);
+    engine.apply([patch()]);
+    next.setAttribute("aria-label", "Site's own label");
+    expect(engine.apply([patch()]).skipped).toEqual([{ patchId: "p1", reason: "site-modified" }]);
+    expect(next.getAttribute("aria-label")).toBe("Site's own label");
+  });
+
+  it("still skips missing and ambiguous targets after a re-render", () => {
+    const old = new FakeElement();
+    const map: Record<string, FakeElement[]> = { "#search": [old] };
+    const engine = createPatchEngine(fakeRoot(map));
+    engine.apply([patch()]);
+    map["#search"] = [];
+    expect(engine.apply([patch()]).skipped).toEqual([{ patchId: "p1", reason: "target-missing" }]);
+    map["#search"] = [new FakeElement(), new FakeElement()];
+    expect(engine.apply([patch()]).skipped).toEqual([{ patchId: "p1", reason: "target-ambiguous" }]);
   });
 });
