@@ -46,7 +46,7 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     findingsList.replaceChildren(...rows);
   }
 
-  function proposalRow(patch: Patch, title: string): HTMLLIElement {
+  function proposalRow(patch: Patch, title: string, source: string, index: number): HTMLLIElement {
     const row = document.createElement("li");
     const label = document.createElement("label");
     label.className = "option";
@@ -60,13 +60,26 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     });
     const copy = document.createElement("span");
     const change = document.createElement("strong");
+    change.id = `proposal-change-${index}`;
     change.textContent = patch.name === "alt"
       ? `Set image description to “${patch.value}”`
       : `Set accessible name to “${patch.value}”`;
     const target = document.createElement("span");
     target.className = "muted";
+    target.id = `proposal-target-${index}`;
     target.textContent = `${title} · ${patch.selector}`;
-    copy.append(change, target);
+    const confidence = patch.confidence >= 0.8 ? "High" : patch.confidence >= 0.5 ? "Medium" : "Low";
+    const metadata = document.createElement("span");
+    metadata.className = "proposal-metadata";
+    metadata.id = `proposal-metadata-${index}`;
+    metadata.textContent = `${source}. ${confidence} confidence.`;
+    const rationale = document.createElement("span");
+    rationale.className = "muted";
+    rationale.id = `proposal-rationale-${index}`;
+    rationale.textContent = patch.rationale;
+    input.setAttribute("aria-labelledby", change.id);
+    input.setAttribute("aria-describedby", `${target.id} ${metadata.id} ${rationale.id}`);
+    copy.append(change, target, metadata, rationale);
     label.append(input, copy);
     row.append(label);
     return row;
@@ -81,7 +94,10 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     reviewNote.textContent = hasPatches
       ? "Choose the fixes you want to apply."
       : "No fixes available for these findings.";
-    proposals.replaceChildren(...patches.map((patch) => proposalRow(patch, titles.get(patch.violationId) ?? "Page element")));
+    const source = patchSet?.model === "mock-v1" ? "AI suggestion (demo mock)" : "AI suggestion";
+    proposals.replaceChildren(...patches.map((patch, index) =>
+      proposalRow(patch, titles.get(patch.violationId) ?? "Page element", source, index),
+    ));
   }
 
   function updateControls(): void {
