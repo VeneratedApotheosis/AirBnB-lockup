@@ -4,7 +4,7 @@
   --ink: #16312a;
   --muted: #46625a;
   --accent: #165443;
-  --surface: #f5f8f5;
+  --surface: #f7faf7;
   --inset: #e8efe9;
   color: var(--ink);
   background: var(--surface);
@@ -14,18 +14,32 @@
 [hidden] { display: none !important; }
 
 body {
-  inline-size: min(24rem, 100vw);
+  inline-size: 42rem;
+  max-inline-size: 100%;
   margin: 0;
 }
 
-main { padding: 1.25rem; }
-.masthead { margin-block-end: 1.25rem; }
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+.masthead {
+  grid-column: 1 / -1;
+  margin: -1.25rem -1.25rem 0;
+  padding: 1.125rem 1.25rem;
+  color: white;
+  background: #153c31;
+}
 h1, h2, h3, p { margin: 0; }
-h1 { font-size: 1.375rem; line-height: 1.2; letter-spacing: -0.025em; }
-h2, h3 { font-size: 1rem; }
-.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+h1 { font-size: 1.5rem; line-height: 1.2; letter-spacing: -0.025em; }
+h2 { font-size: 1.125rem; }
+h3 { font-size: 1rem; }
+.section-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 0.5rem; }
 
-.status, .muted, .rows, summary, label[for] { font-size: 0.875rem; }
+.status, .muted, .rows, summary, label[for] { font-size: 0.9375rem; }
 .status { margin-block: 0.375rem 0.75rem; }
 .muted { color: var(--muted); }
 .error { color: #922e28; }
@@ -57,6 +71,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .rows { margin: 0; padding: 0; list-style: none; }
 .rows li { overflow-wrap: anywhere; }
+#proposals li + li { margin-block-start: 0.25rem; }
+#proposals .option { background: var(--inset); padding: 0.75rem; }
+#proposals .option:hover, #proposals .option:focus-within { background: #dce8df; }
 #apply { margin-block-start: 0.625rem; }
 
 summary { padding-block: 0.625rem; font-weight: 650; cursor: pointer; }
@@ -65,7 +82,6 @@ summary { padding-block: 0.625rem; font-weight: 650; cursor: pointer; }
 .proposal-metadata { display: block; margin-block-start: 0.375rem; font-weight: 600; }
 
 .settings {
-  margin-block-start: 1.25rem;
   padding: 1rem;
   background: var(--inset);
   border-radius: 0.375rem;
@@ -100,6 +116,10 @@ input::placeholder { color: var(--muted); }
 .option input { inline-size: 1rem; block-size: 1rem; margin: 0.15rem 0 0; }
 fieldset:disabled .option { cursor: default; }
 .settings .status { margin-block-end: 0; }
+
+@media (max-width: 31rem) {
+  main { grid-template-columns: minmax(0, 1fr); }
+}
 
 .visually-hidden {
   position: absolute;
