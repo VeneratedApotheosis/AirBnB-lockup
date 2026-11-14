@@ -18,11 +18,17 @@ const patchTargetSchema = z.object({
   rationale: z.string().min(1),
 });
 
-export const patchSchema = patchTargetSchema.extend({
-  op: z.literal("setAttribute"),
-  name: z.enum(["alt", "aria-label"]),
-  value: z.string().trim().min(1),
-}).strict();
+const setAttribute = patchTargetSchema.extend({ op: z.literal("setAttribute") });
+
+export const landmarkRoles = [
+  "banner", "navigation", "main", "contentinfo", "complementary", "region", "search", "heading",
+] as const;
+
+export const patchSchema = z.discriminatedUnion("name", [
+  setAttribute.extend({ name: z.enum(["alt", "aria-label"]), value: z.string().trim().min(1) }).strict(),
+  setAttribute.extend({ name: z.literal("role"), value: z.enum(landmarkRoles) }).strict(),
+  setAttribute.extend({ name: z.literal("aria-level"), value: z.enum(["1", "2", "3", "4", "5", "6"]) }).strict(),
+]);
 
 export const patchSetSchema = z.object({
   url: z.url(),
