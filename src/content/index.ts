@@ -2,7 +2,7 @@ import { scanPage } from "../audit";
 import { createPatchEngine } from "../patch";
 import { patchSetSchema, settingsSchema, type PatchSet, type Violation } from "../shared/contracts";
 import { createRescanScheduler } from "./observer";
-import { applyPreset, PRESET_STYLE_ID } from "./presets";
+import { applyPreset, PRESET_STYLE_ID, READING_FONT_PATH } from "./presets";
 import type { OperationMap, PageOperation, Request } from "../shared/messages";
 
 const scope = globalThis as typeof globalThis & { accessibilityFixerListening?: boolean };
@@ -96,7 +96,8 @@ if (!scope.accessibilityFixerListening) {
       }
       case "PRESET_APPLY": {
         const profile = settingsSchema.shape.profile.parse(request.input.profile);
-        ownWrite(() => applyPreset(document, profile));
+        const fontUrl = profile === "reading" ? chrome.runtime.getURL(READING_FONT_PATH) : undefined;
+        ownWrite(() => applyPreset(document, profile, fontUrl));
         return { profile };
       }
     }

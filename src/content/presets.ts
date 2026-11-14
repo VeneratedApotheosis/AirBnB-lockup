@@ -12,7 +12,8 @@ body a, body a * { color: #00e !important; text-decoration: underline !important
 *:focus, *:focus-visible { outline: 4px solid #000 !important; outline-offset: 2px !important; box-shadow: 0 0 0 6px #ff0 !important; }
 `.trim();
 
-// OpenDyslexic is used only when the reader has it installed; nothing is bundled or fetched.
+export const READING_FONT_PATH = "fonts/OpenDyslexic-Regular.woff2";
+
 const READING_CSS = `
 body, body * { font-family: OpenDyslexic, Verdana, Tahoma, sans-serif !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; line-height: 1.8 !important; }
 body p, body li { max-width: 70ch !important; }
@@ -26,7 +27,10 @@ const CSS: Record<PresetProfile, string> = {
   reading: READING_CSS,
 };
 
-export function presetCss(profile: PresetProfile): string {
+export function presetCss(profile: PresetProfile, readingFontUrl?: string): string {
+  if (profile === "reading" && readingFontUrl) {
+    return `@font-face { font-family: OpenDyslexic; src: url("${readingFontUrl}") format("woff2"); font-display: swap; }\n${CSS.reading}`;
+  }
   return CSS[profile];
 }
 
@@ -46,9 +50,13 @@ export interface PresetDocument<S extends PresetStyle = PresetStyle> {
 }
 
 /** Adds or replaces the preset <style> this module owns. `default` removes it. */
-export function applyPreset<S extends PresetStyle>(doc: PresetDocument<S>, profile: PresetProfile): void {
+export function applyPreset<S extends PresetStyle>(
+  doc: PresetDocument<S>,
+  profile: PresetProfile,
+  readingFontUrl?: string,
+): void {
   const existing = doc.getElementById(PRESET_STYLE_ID) as S | null;
-  const css = presetCss(profile);
+  const css = presetCss(profile, readingFontUrl);
   if (!css) {
     existing?.remove();
     return;

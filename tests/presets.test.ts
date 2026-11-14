@@ -78,6 +78,13 @@ describe("presetCss", () => {
     expect(css).not.toMatch(/url\s*\(/i);
     expect(css).not.toMatch(/@import/i);
   });
+
+  it("adds the bundled font only to the Reading preset when supplied", () => {
+    const url = "chrome-extension://session/fonts/OpenDyslexic-Regular.woff2";
+    expect(presetCss("reading", url)).toContain(`src: url("${url}") format("woff2")`);
+    expect(presetCss("low-vision", url)).not.toContain(url);
+    expect(presetCss("default", url)).toBe("");
+  });
 });
 
 describe("applyPreset", () => {
