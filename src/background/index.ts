@@ -1,10 +1,12 @@
 import { proposePatches } from "../llm";
 import { patchSetSchema, settingsSchema, violationSchema, type Settings } from "../shared/contracts";
 import type { Operation, OperationMap, PageOperation, Reply, Request } from "../shared/messages";
-import { chooseProvider } from "./provider";
+import { chooseProvider, resolveApiKey } from "./provider";
 import { createSiteFixes } from "./site-fixes";
 
 const settingsKey = "accessibilitySettings";
+// Shared team key from .env, injected by scripts/build.mjs. Never sent to the popup or the page.
+const buildApiKey = typeof __BUILD_API_KEY__ === "string" ? __BUILD_API_KEY__ : "";
 const siteFixes = createSiteFixes(chrome.storage.local);
 
 async function getSettings(): Promise<Settings> {
@@ -42,7 +44,7 @@ async function dispatch(request: Request): Promise<OperationMap[Operation]["outp
   switch (request.type) {
     case "PATCH_REQUEST": {
       const { url } = await activePage();
-      const { apiKey } = await getSettings();
+      const apiKey = resolveApiKey((await getSettings()).apiKey, buildApiKey);
       const violations = violationSchema.array().parse(request.input.violations);
       const provider = chooseProvider(apiKey);
       return patchSetSchema.parse(await proposePatches({ url, apiKey, violations, provider }));
