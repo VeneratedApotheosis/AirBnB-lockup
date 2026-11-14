@@ -68,16 +68,6 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
         explanation.textContent = copy.explanation;
         row.append(explanation);
       }
-      const details = document.createElement("details");
-      details.className = "finding-details";
-      const summary = document.createElement("summary");
-      summary.textContent = "Technical details";
-      const impact = document.createElement("p");
-      impact.textContent = `Rule: ${violation.ruleId} · Impact: ${violation.impact}`;
-      const selector = document.createElement("code");
-      selector.textContent = violation.selector;
-      details.append(summary, impact, selector);
-      row.append(details);
       return row;
     });
     if (rows.length === 0) {

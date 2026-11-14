@@ -58,9 +58,7 @@ test("applying and undoing a suggested fix changes axe findings from 3 to 2 to 3
       await findings.click();
       const buttonFinding = popup.locator("#findings-list li").filter({ hasText: "Button has no name" });
       await expect(buttonFinding.getByText(/A screen reader may say/)).toBeVisible();
-      await expect(buttonFinding.locator("code")).toBeHidden();
-      await buttonFinding.getByText("Technical details").press("Enter");
-      await expect(buttonFinding.getByText(/Rule: button-name/)).toBeVisible();
+      await expect(popup.locator("#findings-list details")).toHaveCount(0);
       await findings.click();
       await expect(popup.getByText("AI suggestion (demo mock). Medium confidence.")).toBeVisible();
       const approval = popup.getByRole("checkbox", { name: /Set accessible name/ });
