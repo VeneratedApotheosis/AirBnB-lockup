@@ -2,6 +2,33 @@ import type { Patch, PatchSet, Violation } from "../shared/contracts";
 import type { sendRequest } from "./transport";
 import { mountSettings } from "./settings";
 
+const findingCopy: ReadonlyMap<string, { title: string; explanation: string }> = new Map([
+  ["button-name", {
+    title: "Button has no name",
+    explanation: "A screen reader may say “button” without telling the person what it does.",
+  }],
+  ["image-alt", {
+    title: "Image is missing a description",
+    explanation: "Someone using a screen reader may miss information that appears only in the image.",
+  }],
+  ["heading-order", {
+    title: "Heading levels skip a step",
+    explanation: "People who navigate by headings may have trouble following how the page is organized.",
+  }],
+  ["link-name", {
+    title: "Link has no name",
+    explanation: "A screen reader may announce a link without explaining where it goes.",
+  }],
+  ["label", {
+    title: "Form field is missing a label",
+    explanation: "A screen reader may give no clue about what to enter in this field.",
+  }],
+  ["color-contrast", {
+    title: "Text is hard to see",
+    explanation: "The text and its background are too similar in color, which can make the text hard to read.",
+  }],
+]);
+
 export function mountPopup(document: Document, request: typeof sendRequest): void {
   const scan = get<HTMLButtonElement>("scan");
   const revert = get<HTMLButtonElement>("revert");
@@ -31,12 +58,26 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     findingsLabel.textContent = `Findings (${violations.length})`;
     const rows = violations.map((violation) => {
       const row = document.createElement("li");
+      const copy = findingCopy.get(violation.ruleId);
       const title = document.createElement("strong");
-      title.textContent = violation.help;
-      const detail = document.createElement("span");
-      detail.className = "muted";
-      detail.textContent = `${violation.impact} impact · ${violation.selector}`;
-      row.append(title, detail);
+      title.textContent = copy?.title ?? violation.help;
+      row.append(title);
+      if (copy) {
+        const explanation = document.createElement("p");
+        explanation.className = "muted";
+        explanation.textContent = copy.explanation;
+        row.append(explanation);
+      }
+      const details = document.createElement("details");
+      details.className = "finding-details";
+      const summary = document.createElement("summary");
+      summary.textContent = "Technical details";
+      const impact = document.createElement("p");
+      impact.textContent = `Rule: ${violation.ruleId} · Impact: ${violation.impact}`;
+      const selector = document.createElement("code");
+      selector.textContent = violation.selector;
+      details.append(summary, impact, selector);
+      row.append(details);
       return row;
     });
     if (rows.length === 0) {
