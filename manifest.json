@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "minimum_chrome_version": "106",
   "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://api.anthropic.com/*"],
   "web_accessible_resources": [{
     "resources": ["fonts/OpenDyslexic-Regular.woff2"],
     "matches": ["http://*/*", "https://*/*"],
