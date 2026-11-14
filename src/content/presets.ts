@@ -1,0 +1,62 @@
+import type { Settings } from "../shared/contracts";
+
+export type PresetProfile = Settings["profile"];
+
+/** Id of the one <style> element this module owns on a page. */
+export const PRESET_STYLE_ID = "accessibility-fixer-preset";
+
+const LOW_VISION_CSS = `
+html { font-size: 125% !important; }
+body, body * { color: #000 !important; background-color: #fff !important; border-color: #000 !important; }
+body a, body a * { color: #00e !important; text-decoration: underline !important; }
+*:focus, *:focus-visible { outline: 4px solid #000 !important; outline-offset: 2px !important; box-shadow: 0 0 0 6px #ff0 !important; }
+`.trim();
+
+// OpenDyslexic is used only when the reader has it installed; nothing is bundled or fetched.
+const READING_CSS = `
+body, body * { font-family: OpenDyslexic, Verdana, Tahoma, sans-serif !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; line-height: 1.8 !important; }
+body p, body li { max-width: 70ch !important; }
+html { scroll-behavior: auto !important; }
+*, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+`.trim();
+
+const CSS: Record<PresetProfile, string> = {
+  default: "",
+  "low-vision": LOW_VISION_CSS,
+  reading: READING_CSS,
+};
+
+export function presetCss(profile: PresetProfile): string {
+  return CSS[profile];
+}
+
+/** The parts of Document that applyPreset uses, so it can be tested without a browser. */
+export interface PresetStyle {
+  id: string;
+  textContent: string | null;
+  remove(): void;
+}
+export interface PresetDocument {
+  getElementById(id: string): unknown;
+  createElement(tag: "style"): PresetStyle;
+  head: { appendChild(node: PresetStyle): unknown } | null;
+  documentElement: { appendChild(node: PresetStyle): unknown };
+}
+
+/** Adds or replaces the preset <style> this module owns. `default` removes it. */
+export function applyPreset(doc: PresetDocument, profile: PresetProfile): void {
+  const existing = doc.getElementById(PRESET_STYLE_ID) as PresetStyle | null;
+  const css = presetCss(profile);
+  if (!css) {
+    existing?.remove();
+    return;
+  }
+  if (existing) {
+    existing.textContent = css;
+    return;
+  }
+  const style = doc.createElement("style");
+  style.id = PRESET_STYLE_ID;
+  style.textContent = css;
+  (doc.head ?? doc.documentElement).appendChild(style);
+}
