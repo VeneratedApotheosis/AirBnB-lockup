@@ -7,10 +7,12 @@ export interface OperationMap {
   PATCH_REVERT: { input: null; output: RevertResult };
   SETTINGS_GET: { input: null; output: PublicSettings };
   SETTINGS_SET: { input: Settings; output: PublicSettings };
+  /** Turn a page preset on, or off with "default". Handled by the content script. */
+  PRESET_APPLY: { input: { profile: Settings["profile"] }; output: { profile: Settings["profile"] } };
 }
 
 export type Operation = keyof OperationMap;
-export type PageOperation = "AUDIT_REQUEST" | "PATCH_APPLY" | "PATCH_REVERT";
+export type PageOperation = "AUDIT_REQUEST" | "PATCH_APPLY" | "PATCH_REVERT" | "PRESET_APPLY";
 
 export type Request<K extends Operation = Operation> = {
   [Name in K]: { type: Name; input: OperationMap[Name]["input"] };

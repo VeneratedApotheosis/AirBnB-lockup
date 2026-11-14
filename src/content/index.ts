@@ -19,6 +19,8 @@ if (!scope.accessibilityFixerListening) {
       }
       case "PATCH_REVERT":
         return patches.revert();
+      case "PRESET_APPLY":
+        throw new Error("Page presets are still being built.");
     }
   }
 

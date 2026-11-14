@@ -55,6 +55,7 @@ async function dispatch(request: Request): Promise<OperationMap[Operation]["outp
     case "AUDIT_REQUEST":
     case "PATCH_APPLY":
     case "PATCH_REVERT":
+    case "PRESET_APPLY":
       return sendToPage(request);
   }
 }
