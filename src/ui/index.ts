@@ -1,4 +1,5 @@
 import { mountPopup } from "./popup";
+import { mountPopupHeight } from "./popup-height";
 import { sendRequest } from "./transport";
 
 const width = document.querySelector<HTMLSelectElement>("#popup-width");
@@ -15,4 +16,5 @@ if (width) {
   });
 }
 
+mountPopupHeight(document, localStorage);
 mountPopup(document, sendRequest);

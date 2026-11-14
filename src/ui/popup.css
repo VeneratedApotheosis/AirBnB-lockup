@@ -192,6 +192,42 @@ fieldset:disabled .option { cursor: default; }
   .settings { padding: 1rem 0 0; border-inline-start: 0; border-block-start: 1px solid #d8ded4; }
 }
 
+/* Vertical resize (src/ui/popup-height.ts). Chrome fits the popup window to the body height. */
+body[data-popup-height] {
+  display: flex;
+  flex-direction: column;
+  block-size: var(--popup-height);
+}
+body[data-popup-height] main {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+}
+body.resizing { cursor: ns-resize; user-select: none; }
+
+.resize-handle {
+  position: relative;
+  flex: none;
+  block-size: 0.875rem;
+  border-block-start: 1px solid #d8ded4;
+  background: var(--inset);
+  cursor: ns-resize;
+  touch-action: none;
+}
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inline-size: 2.5rem;
+  block-size: 0.25rem;
+  border-radius: 999px;
+  background: var(--muted);
+  transform: translate(-50%, -50%);
+}
+.resize-handle:hover, body.resizing .resize-handle { background: var(--highlight); }
+.resize-handle:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+
 .visually-hidden {
   position: absolute;
   inline-size: 1px;
