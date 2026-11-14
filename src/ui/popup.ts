@@ -6,6 +6,7 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
   const scan = get<HTMLButtonElement>("scan");
   const revert = get<HTMLButtonElement>("revert");
   const apply = get<HTMLButtonElement>("apply");
+  const selectAll = get<HTMLButtonElement>("select-all");
   const status = get("status");
   const review = get("review");
   const reviewNote = get("review-note");
@@ -90,6 +91,7 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     const hasPatches = patches.length > 0;
     review.hidden = !patchSet;
     choices.hidden = !hasPatches;
+    selectAll.hidden = !hasPatches;
     apply.hidden = !hasPatches;
     reviewNote.textContent = hasPatches
       ? "Choose the fixes you want to apply."
@@ -104,8 +106,27 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     scan.disabled = working;
     revert.disabled = working;
     choices.disabled = working;
+    selectAll.disabled = working;
+    selectAll.textContent = allSelected() ? "Clear selection" : "Select all";
     apply.disabled = working || selected.size === 0;
   }
+
+  function allSelected(): boolean {
+    return selected.size > 0 && (patchSet?.patches.every((patch) => selected.has(patch.id)) ?? false);
+  }
+
+  selectAll.addEventListener("click", () => {
+    if (!patchSet?.patches.length || working) return;
+    const check = !allSelected();
+    selected.clear();
+    if (check) {
+      for (const patch of patchSet.patches) selected.add(patch.id);
+    }
+    for (const input of proposals.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
+      input.checked = check;
+    }
+    updateControls();
+  });
 
   async function run(button: HTMLButtonElement, pending: string, action: () => Promise<string>): Promise<void> {
     if (working) return;

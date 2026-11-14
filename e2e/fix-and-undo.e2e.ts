@@ -59,7 +59,14 @@ test("applying and undoing a suggested fix changes axe findings from 3 to 2 to 3
       const approval = popup.getByRole("checkbox", { name: /Set accessible name/ });
       const apply = popup.getByRole("button", { name: "Apply selected fixes" });
       await expect(apply).toBeDisabled();
+      await popup.getByRole("button", { name: "Select all" }).press("Enter");
+      await expect(approval).toBeChecked();
+      await expect(apply).toBeEnabled();
+      await popup.getByRole("button", { name: "Clear selection" }).click();
+      await expect(approval).not.toBeChecked();
+      await expect(apply).toBeDisabled();
       await approval.check();
+      await expect(popup.getByRole("button", { name: "Clear selection" })).toBeVisible();
       await apply.click();
       await expect(status).toContainText("Applied 1");
       await expect(searchButton).toHaveAccessibleName("Submit");

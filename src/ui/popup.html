@@ -22,7 +22,10 @@
       <button id="scan" class="button primary" type="button">Scan this page</button>
 
       <section id="review" aria-labelledby="review-heading" hidden>
-        <h3 id="review-heading">Suggested fixes</h3>
+        <div class="section-heading">
+          <h3 id="review-heading">Suggested fixes</h3>
+          <button id="select-all" class="quiet" type="button" aria-controls="choices" hidden>Select all</button>
+        </div>
         <p id="review-note" class="muted"></p>
         <fieldset id="choices">
           <legend class="visually-hidden">Fixes to apply</legend>
