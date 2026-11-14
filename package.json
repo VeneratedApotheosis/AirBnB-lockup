@@ -17,11 +17,16 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "8.72.2",
     "vite": "7.3.8",
-    "vitest": "3.2.7"
+    "vitest": "4.1.12"
   },
   "dependencies": {
     "axe-core": "4.14.0",
     "zod": "4.6.7"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
   },
   "engines": {
     "node": ">=22.12.0"
