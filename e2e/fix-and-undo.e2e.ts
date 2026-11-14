@@ -78,12 +78,34 @@ test("applying and undoing a suggested fix changes axe findings from 3 to 2 to 3
 
       await scan.click();
       await expect(findings).toHaveText("Findings (2)");
+      await expect(status).toHaveText("No suggested fixes for this scan.");
+      await expect(popup.getByRole("heading", { name: "Suggested fixes" })).toBeHidden();
       await popup.getByRole("button", { name: "Undo fixes" }).click();
       await expect(status).toContainText("Undone 1");
       await expect(searchButton).toHaveAccessibleName("");
 
       await scan.click();
       await expect(findings).toHaveText("Findings (3)");
+      await expect(approval).toBeVisible();
+
+      // Reproduce the repeated findings from the popup review.
+      await page.locator("main").evaluate((main) => {
+        const heading = document.createElement("h1");
+        heading.textContent = "Options";
+        main.replaceChildren(heading, ...Array.from({ length: 19 }, (_, index) => {
+          const button = document.createElement("button");
+          button.textContent = `Option ${index + 1}`;
+          button.setAttribute("aria-checked", "true");
+          return button;
+        }));
+      });
+      await scan.click();
+      await expect(popup.locator("#scan-result")).toHaveText("19 accessibility findings");
+      await expect(status).toHaveText("No suggested fixes for this scan.");
+      await expect(popup.locator("#findings-list > li")).toHaveCount(1);
+      const group = popup.getByText("19 affected elements");
+      await group.press("Enter");
+      await expect(popup.locator(".finding-group li:visible")).toHaveCount(19);
     } finally {
       await context.close();
     }

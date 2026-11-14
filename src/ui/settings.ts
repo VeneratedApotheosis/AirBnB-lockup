@@ -4,9 +4,9 @@ import type { sendRequest } from "./transport";
 type Profile = PublicSettings["profile"];
 
 const profiles: { value: Profile; name: string; description: string }[] = [
-  { value: "default", name: "Default", description: "Use the website’s original appearance." },
-  { value: "low-vision", name: "Low vision", description: "Increase contrast, enlarge text, and strengthen focus outlines." },
-  { value: "reading", name: "Reading", description: "Increase text spacing and reduce motion for easier reading." },
+  { value: "default", name: "Default", description: "Original page appearance." },
+  { value: "low-vision", name: "Low vision", description: "Larger text, higher contrast, clearer focus." },
+  { value: "reading", name: "Reading", description: "More text spacing, less motion." },
 ];
 
 export function mountSettings(document: Document, request: typeof sendRequest): void {
@@ -95,7 +95,7 @@ export function mountSettings(document: Document, request: typeof sendRequest): 
   void request({ type: "SETTINGS_GET", input: null }).then(({ profile }) => {
     saved = profile;
     reflectSaved();
-    status.textContent = "Choose a profile to apply it to the current page.";
+    status.textContent = "";
     fieldset.disabled = false;
   }, () => {
     status.classList.add("error");

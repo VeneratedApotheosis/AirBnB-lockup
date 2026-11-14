@@ -3,6 +3,10 @@ import type { sendRequest } from "./transport";
 import { mountSettings } from "./settings";
 
 const findingCopy: ReadonlyMap<string, { title: string; explanation: string }> = new Map([
+  ["aria-allowed-attr", {
+    title: "A control has an unsupported accessibility setting",
+    explanation: "Assistive technology may give people incomplete or confusing information about how the control works.",
+  }],
   ["button-name", {
     title: "Button has no name",
     explanation: "A screen reader may say “button” without telling the person what it does.",
@@ -35,6 +39,7 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
   const apply = get<HTMLButtonElement>("apply");
   const selectAll = get<HTMLButtonElement>("select-all");
   const status = get("status");
+  const scanResult = get("scan-result");
   const review = get("review");
   const reviewNote = get("review-note");
   const choices = get<HTMLFieldSetElement>("choices");
@@ -54,13 +59,23 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
   }
 
   function showFindings(violations: Violation[]): void {
-    findings.hidden = false;
+    const count = violations.length;
+    scanResult.textContent = `${count} accessibility ${count === 1 ? "finding" : "findings"}`;
+    scanResult.hidden = false;
+    findings.hidden = count === 0;
+    findings.open = false;
     findingsLabel.textContent = `Findings (${violations.length})`;
-    const rows = violations.map((violation) => {
+    const groups = new Map<string, [Violation, ...Violation[]]>();
+    for (const violation of violations) {
+      const group = groups.get(violation.ruleId);
+      if (group) group.push(violation);
+      else groups.set(violation.ruleId, [violation]);
+    }
+    const rows = [...groups.entries()].map(([ruleId, group]) => {
       const row = document.createElement("li");
-      const copy = findingCopy.get(violation.ruleId);
+      const copy = findingCopy.get(ruleId);
       const title = document.createElement("strong");
-      title.textContent = copy?.title ?? violation.help;
+      title.textContent = copy?.title ?? group[0].help;
       row.append(title);
       if (copy) {
         const explanation = document.createElement("p");
@@ -68,13 +83,24 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
         explanation.textContent = copy.explanation;
         row.append(explanation);
       }
+      if (group.length > 1) {
+        const details = document.createElement("details");
+        details.className = "finding-group";
+        const summary = document.createElement("summary");
+        summary.textContent = `${group.length} affected elements`;
+        const occurrences = document.createElement("ol");
+        for (const { impact, html } of group) {
+          const occurrence = document.createElement("li");
+          const tag = /^<([a-z][\w-]*)\b/i.exec(html)?.[1]?.toLowerCase();
+          const element = tag === "button" ? "Button" : tag === "a" ? "Link" : tag === "img" ? "Image" : "Page element";
+          occurrence.textContent = `${element} · ${impact} impact`;
+          occurrences.append(occurrence);
+        }
+        details.append(summary, occurrences);
+        row.append(details);
+      }
       return row;
     });
-    if (rows.length === 0) {
-      const row = document.createElement("li");
-      row.textContent = "No findings in this scan.";
-      rows.push(row);
-    }
     findingsList.replaceChildren(...rows);
   }
 
@@ -120,13 +146,11 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
   function showProposals(): void {
     const patches = patchSet?.patches ?? [];
     const hasPatches = patches.length > 0;
-    review.hidden = !patchSet;
+    review.hidden = !hasPatches;
     choices.hidden = !hasPatches;
     selectAll.hidden = !hasPatches;
     apply.hidden = !hasPatches;
-    reviewNote.textContent = hasPatches
-      ? "Choose the fixes you want to apply."
-      : "No fixes available for these findings.";
+    reviewNote.textContent = "Choose the fixes you want to apply.";
     const source = patchSet?.model === "mock-v1" ? "AI suggestion (demo mock)" : "AI suggestion";
     proposals.replaceChildren(...patches.map((patch, index) =>
       proposalRow(patch, titles.get(patch.violationId) ?? "Page element", source, index),
@@ -185,6 +209,7 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     selected.clear();
     showProposals();
     findings.hidden = true;
+    scanResult.hidden = true;
     const { violations } = await request({ type: "AUDIT_REQUEST", input: null });
     showFindings(violations);
     scan.textContent = "Rescan page";
@@ -194,7 +219,11 @@ export function mountPopup(document: Document, request: typeof sendRequest): voi
     titles = new Map(violations.map((violation) => [violation.id, violation.help]));
     patchSet = await request({ type: "PATCH_REQUEST", input: { violations } });
     showProposals();
-    return `${count} · ${patchSet.patches.length} suggested ${patchSet.patches.length === 1 ? "fix" : "fixes"}.`;
+    if (patchSet.patches.length === 0) {
+      findings.open = true;
+      return "No suggested fixes for this scan.";
+    }
+    return `${patchSet.patches.length} suggested ${patchSet.patches.length === 1 ? "fix" : "fixes"} to review.`;
   }));
 
   apply.addEventListener("click", () => {
