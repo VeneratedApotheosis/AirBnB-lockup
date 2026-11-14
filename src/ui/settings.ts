@@ -60,11 +60,26 @@ export function mountSettings(document: Document, request: typeof sendRequest): 
     status.textContent = "Saving preference…";
     try {
       saved = (await request({ type: "SETTINGS_SET", input: { profile } })).profile;
-      status.textContent = "Preference saved. Applying profiles to pages will be available later.";
     } catch {
       status.classList.add("error");
       status.textContent = "Couldn’t save the preference. Choose a profile to retry.";
-    } finally {
+      finish();
+      return;
+    }
+    status.textContent = "Preference saved. Applying it to this page…";
+    try {
+      await request({ type: "PRESET_APPLY", input: { profile: saved } });
+      status.textContent = saved === "default"
+        ? "Preference saved. This page is back to its original appearance."
+        : `Preference saved and ${profileName(saved)} applied to this page.`;
+    } catch (error) {
+      status.classList.add("error");
+      const reason = error instanceof Error ? ` ${error.message}` : "";
+      status.textContent = `Preference saved, but it couldn’t be applied to this page.${reason}`;
+    }
+    finish();
+
+    function finish(): void {
       reflectSaved();
       fieldset.disabled = false;
       if (hadFocus && document.activeElement === document.body) {
@@ -73,10 +88,14 @@ export function mountSettings(document: Document, request: typeof sendRequest): 
     }
   }
 
+  function profileName(profile: Profile): string {
+    return profiles.find(({ value }) => value === profile)?.name ?? profile;
+  }
+
   void request({ type: "SETTINGS_GET", input: null }).then(({ profile }) => {
     saved = profile;
     reflectSaved();
-    status.textContent = "Profile preferences are saved for later use.";
+    status.textContent = "Choose a profile to apply it to the current page.";
     fieldset.disabled = false;
   }, () => {
     status.classList.add("error");
