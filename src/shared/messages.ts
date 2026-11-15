@@ -2,6 +2,8 @@ import type { PatchResult, PatchSet, PublicSettings, RevertResult, Settings, Vio
 
 export interface OperationMap {
   AUDIT_REQUEST: { input: null; output: { type: "AUDIT_RESULT"; violations: Violation[] } };
+  PAGE_TEXT: { input: null; output: { text: string } };
+  PAGE_HELP: { input: { question: string | null }; output: { answer: string } };
   PATCH_REQUEST: { input: { violations: Violation[] }; output: PatchSet };
   PATCH_APPLY: { input: PatchSet; output: PatchResult };
   PATCH_REVERT: { input: null; output: RevertResult };
@@ -14,7 +16,7 @@ export interface OperationMap {
 }
 
 export type Operation = keyof OperationMap;
-export type PageOperation = "AUDIT_REQUEST" | "PATCH_APPLY" | "PATCH_REVERT" | "PRESET_APPLY";
+export type PageOperation = "AUDIT_REQUEST" | "PATCH_APPLY" | "PATCH_REVERT" | "PRESET_APPLY" | "PAGE_TEXT";
 
 export type Request<K extends Operation = Operation> = {
   [Name in K]: { type: Name; input: OperationMap[Name]["input"] };

@@ -38,6 +38,25 @@
 }
 
 * { box-sizing: border-box; }
+.page-help {
+  grid-column: 1 / -1;
+  min-inline-size: 0;
+  border-block-start: 1px solid var(--line);
+  padding-block-start: 1rem;
+}
+.question-controls { display: flex; gap: 0.5rem; }
+#page-question {
+  min-inline-size: 0;
+  flex: 1;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+.question-controls .button { inline-size: auto; }
+#page-help-answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+#page-help-answer:empty { margin: 0; }
 [hidden] { display: none !important; }
 
 body {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Patch, Violation } from "../src/shared/contracts";
 import { proposePatches } from "../src/llm";
-import { CLAUDE_MODEL, createClaudeProvider } from "../src/llm/claude";
+import { askClaudeAboutPage, CLAUDE_MODEL, createClaudeProvider } from "../src/llm/claude";
 
 const finding: Violation = {
   id: "button-name:button",
@@ -27,6 +27,14 @@ const url = "https://example.com/private";
 function reply(text: string): Response {
   return Response.json({ content: [{ type: "text", text }] });
 }
+
+it.each([null, "Where are the opening hours?"])("sends page help requests with question %s", async (question) => {
+  const fetchMessages = vi.fn<typeof fetch>().mockResolvedValue(reply("Look under Branch hours."));
+  await expect(askClaudeAboutPage("Branch hours\nMonday 9–5", question, "test-key", fetchMessages))
+    .resolves.toBe("Look under Branch hours.");
+  const request = JSON.parse(String(fetchMessages.mock.calls[0]?.[1]?.body));
+  expect(JSON.parse(request.messages[0].content)).toEqual({ pageText: "Branch hours\nMonday 9–5", question });
+});
 
 describe("Claude provider", () => {
   it("uses the Messages API and sends only redacted finding context", async () => {

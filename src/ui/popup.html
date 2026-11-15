@@ -62,6 +62,19 @@
       </fieldset>
       <p id="settings-status" class="muted status" role="status">Loading settings…</p>
     </section>
+    <section class="page-help" aria-labelledby="page-help-heading">
+      <h2 id="page-help-heading">Page help</h2>
+      <p id="page-help-note" class="muted">These actions send an excerpt of this page’s text and any question you enter to Claude.</p>
+      <button id="summarize-page" class="quiet" type="button" aria-describedby="page-help-note">Summarize page</button>
+      <form id="page-question-form">
+        <label for="page-question">Ask a question about this page</label>
+        <div class="question-controls">
+          <input id="page-question" type="text" maxlength="500" required placeholder="Where are the opening hours?" aria-describedby="page-help-note">
+          <button class="button primary" type="submit">Ask</button>
+        </div>
+      </form>
+      <p id="page-help-answer" class="status" role="status"></p>
+    </section>
   </main>
   <div id="popup-resize-height" class="resize-handle resize-s" data-resize="s" role="separator"
     aria-orientation="horizontal" aria-label="Popup height" tabindex="0"

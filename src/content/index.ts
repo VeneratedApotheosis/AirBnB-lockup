@@ -1,4 +1,5 @@
 import { scanPage } from "../audit";
+import { readPageText } from "./page-text";
 import { createPatchEngine } from "../patch";
 import { patchSetSchema, settingsSchema, type PatchSet, type Violation } from "../shared/contracts";
 import { createRescanScheduler } from "./observer";
@@ -80,6 +81,8 @@ if (!scope.accessibilityFixerListening) {
 
   async function dispatch(request: Request<PageOperation>): Promise<OperationMap[PageOperation]["output"]> {
     switch (request.type) {
+      case "PAGE_TEXT":
+        return { text: readPageText(document) };
       case "AUDIT_REQUEST":
         return { type: "AUDIT_RESULT", violations: await audit() };
       case "PATCH_APPLY": {

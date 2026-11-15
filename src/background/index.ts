@@ -1,4 +1,6 @@
 import { proposePatches } from "../llm";
+import { askClaudeAboutPage } from "../llm/claude";
+import { redactPersonalData } from "../llm/redact";
 import { patchSetSchema, settingsSchema, violationSchema, type Settings } from "../shared/contracts";
 import type { Operation, OperationMap, PageOperation, Reply, Request } from "../shared/messages";
 import { chooseProvider, resolveApiKey } from "./provider";
@@ -43,6 +45,24 @@ async function sendToPage<K extends PageOperation>(request: Request<K>): Promise
 
 async function dispatch(request: Request): Promise<OperationMap[Operation]["output"]> {
   switch (request.type) {
+    case "PAGE_HELP": {
+      const apiKey = resolveApiKey((await getSettings()).apiKey, buildApiKey);
+      if (!apiKey) throw new Error("Save a Claude API key in Settings to use Page help.");
+      const question = request.input.question;
+      if (question !== null && (typeof question !== "string" || !question.trim() || question.length > 500)) {
+        throw new Error("Enter a question between 1 and 500 characters.");
+      }
+      const { text } = await sendToPage({ type: "PAGE_TEXT", input: null });
+      if (!text) throw new Error("No readable text was found on this page.");
+      const answer = await askClaudeAboutPage(
+        redactPersonalData(text),
+        question === null ? null : redactPersonalData(question.trim()),
+        apiKey,
+      );
+      return { answer };
+    }
+    case "PAGE_TEXT":
+      throw new Error("Use Page help to read the current page.");
     case "PATCH_REQUEST": {
       const { url } = await activePage();
       const apiKey = resolveApiKey((await getSettings()).apiKey, buildApiKey);
